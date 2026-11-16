@@ -7,3 +7,8 @@ DirectoryIndex index.php
   php_value upload_max_filesize 8M
   php_value post_max_size 10M
 </IfModule>
+
+# Block dotfiles such as .env
+<FilesMatch "^\.env">
+  Require all denied
+</FilesMatch>
