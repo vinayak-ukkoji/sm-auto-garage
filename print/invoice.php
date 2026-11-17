@@ -20,7 +20,7 @@ print_start('Invoice ' . $inv['invoice_no']);
 print_toolbar($wa);
 ?>
 <div class="sheet">
-  <?php print_garage_header('<div class="b" style="font-size:14px">TAX INVOICE</div><div class="muted">Original for Recipient</div>'
+  <?php print_garage_header('<div class="b" style="font-size:14px">' . ($inv['gst_enabled'] ? 'TAX INVOICE' : 'INVOICE') . '</div><div class="muted">Original for Recipient</div>'
       . ($inv['status'] === 'cancelled' ? '<div style="color:#c00;font-size:18px;font-weight:700">CANCELLED</div>' : '')); ?>
   <table class="grid" style="margin-top:8px">
     <tr>
@@ -46,8 +46,8 @@ print_toolbar($wa);
   </table>
 
   <table class="items" style="margin-top:10px">
-    <tr><th>#</th><th style="text-align:left">Description</th><th>HSN/SAC</th><th>Qty</th><th>Rate</th><th>Disc</th><th>Taxable</th><th>GST%</th>
-      <?= $inv['is_igst'] ? '<th>IGST</th>' : '<th>CGST</th><th>SGST</th>' ?><th>Amount</th></tr>
+    <tr><th>#</th><th style="text-align:left">Description</th><th>HSN/SAC</th><th>Qty</th><th>Rate</th><th>Disc</th><?= $inv['gst_enabled'] ? '<th>Taxable</th><th>GST%</th>' : '' ?>
+      <?= !$inv['gst_enabled'] ? '' : ($inv['is_igst'] ? '<th>IGST</th>' : '<th>CGST</th><th>SGST</th>') ?><th>Amount</th></tr>
     <?php foreach ($items as $i => $it): ?>
     <tr>
       <td class="c"><?= $i + 1 ?></td>
@@ -56,9 +56,10 @@ print_toolbar($wa);
       <td class="r"><?= qty($it['qty']) ?></td>
       <td class="r"><?= inr($it['rate']) ?></td>
       <td class="r"><?= (float) $it['discount'] ? inr($it['discount']) : '-' ?></td>
-      <td class="r"><?= inr($it['taxable']) ?></td>
-      <td class="c"><?= qty($it['gst_rate']) ?></td>
-      <?php if ($inv['is_igst']): ?><td class="r"><?= inr($it['tax']) ?></td>
+      <?php if ($inv['gst_enabled']): ?><td class="r"><?= inr($it['taxable']) ?></td>
+      <td class="c"><?= qty($it['gst_rate']) ?></td><?php endif; ?>
+      <?php if (!$inv['gst_enabled']): ?>
+      <?php elseif ($inv['is_igst']): ?><td class="r"><?= inr($it['tax']) ?></td>
       <?php else: $h = round($it['tax'] / 2, 2); ?><td class="r"><?= inr($h) ?></td><td class="r"><?= inr($it['tax'] - $h) ?></td><?php endif; ?>
       <td class="r"><?= inr($it['amount']) ?></td>
     </tr>
@@ -67,6 +68,7 @@ print_toolbar($wa);
 
   <div style="display:flex;gap:12px;margin-top:10px">
     <div style="flex:1">
+      <?php if ($inv['gst_enabled']): ?>
       <table class="items">
         <tr><th>GST %</th><th>Taxable</th><?= $inv['is_igst'] ? '<th>IGST</th>' : '<th>CGST</th><th>SGST</th>' ?><th>Total Tax</th></tr>
         <?php foreach ($gstSummary as $g): $h = round($g['tax'] / 2, 2); ?>
@@ -75,6 +77,7 @@ print_toolbar($wa);
           <td class="r"><?= inr($g['tax']) ?></td></tr>
         <?php endforeach; ?>
       </table>
+      <?php endif; ?>
       <div class="box2" style="margin-top:8px"><b>Amount in words:</b> <?= e(amount_in_words((float) $inv['total'])) ?></div>
       <?php if ($s['bank_details'] || $s['upi_id']): ?>
         <div class="box2" style="margin-top:6px"><b>Bank / UPI:</b> <?= nl2br(e($s['bank_details'])) ?> <?= $s['upi_id'] ? '<br>UPI: ' . e($s['upi_id']) : '' ?></div>
@@ -82,9 +85,10 @@ print_toolbar($wa);
     </div>
     <div style="width:40%">
       <table class="tot">
-        <tr><td>Taxable Amount</td><td class="r"><?= inr($inv['subtotal']) ?></td></tr>
+        <tr><td><?= $inv['gst_enabled'] ? 'Taxable Amount' : 'Sub Total' ?></td><td class="r"><?= inr($inv['subtotal']) ?></td></tr>
         <?php if ((float) $inv['discount']): ?><tr><td class="muted">(Discount given)</td><td class="r muted"><?= inr($inv['discount']) ?></td></tr><?php endif; ?>
-        <?php if ($inv['is_igst']): ?><tr><td>IGST</td><td class="r"><?= inr($inv['igst']) ?></td></tr>
+        <?php if (!$inv['gst_enabled']): ?>
+        <?php elseif ($inv['is_igst']): ?><tr><td>IGST</td><td class="r"><?= inr($inv['igst']) ?></td></tr>
         <?php else: ?><tr><td>CGST</td><td class="r"><?= inr($inv['cgst']) ?></td></tr><tr><td>SGST</td><td class="r"><?= inr($inv['sgst']) ?></td></tr><?php endif; ?>
         <tr><td>Round Off</td><td class="r"><?= inr($inv['round_off']) ?></td></tr>
         <tr class="g"><td>Grand Total</td><td class="r">₹<?= inr($inv['total']) ?></td></tr>

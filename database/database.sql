@@ -45,6 +45,7 @@ CREATE TABLE settings (
   phone                  VARCHAR(20)  NULL,
   email                  VARCHAR(100) NULL,
   gstin                  VARCHAR(15)  NULL,
+  gst_enabled            TINYINT(1)   NOT NULL DEFAULT 1,   -- 1 = charge GST on new bills
   state_code             CHAR(2)      NOT NULL DEFAULT '27',
   state_name             VARCHAR(50)  NOT NULL DEFAULT 'Maharashtra',
   logo                   VARCHAR(255) NULL,
@@ -430,6 +431,7 @@ CREATE TABLE invoices (
   invoice_date     DATE          NOT NULL,
   place_of_supply  CHAR(2)       NOT NULL DEFAULT '27',
   is_igst          TINYINT(1)    NOT NULL DEFAULT 0,
+  gst_enabled      TINYINT(1)    NOT NULL DEFAULT 1,   -- snapshot of the GST setting when the invoice was made
   subtotal         DECIMAL(12,2) NOT NULL DEFAULT 0,   -- total taxable
   discount         DECIMAL(12,2) NOT NULL DEFAULT 0,
   cgst             DECIMAL(12,2) NOT NULL DEFAULT 0,

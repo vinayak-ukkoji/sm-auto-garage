@@ -149,7 +149,7 @@ include __DIR__ . '/includes/header.php';
   <div class="mx-3 totals-box">
     <div class="kv"><span><?= te('labour') ?></span><span><?= money($jc['labour_total']) ?></span></div>
     <div class="kv"><span><?= te('parts') ?></span><span><?= money($jc['parts_total']) ?></span></div>
-    <div class="kv"><span>GST</span><span><?= money($jc['tax_total']) ?></span></div>
+    <?php if (gst_on() || (float) $jc['tax_total'] > 0): ?><div class="kv"><span>GST</span><span><?= money($jc['tax_total']) ?></span></div><?php endif; ?>
     <div class="kv"><span><?= te('grand_total') ?></span><span><?= money($jc['grand_total']) ?></span></div>
   </div>
   <?php endif; ?>

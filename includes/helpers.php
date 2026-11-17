@@ -145,6 +145,12 @@ function setting(?string $key = null)
     return $key === null ? $s : ($s[$key] ?? null);
 }
 
+/** Is GST currently enabled in Settings? (new documents follow this; saved invoices keep their own flag) */
+function gst_on(): bool
+{
+    return (int) (setting('gst_enabled') ?? 1) === 1;
+}
+
 // ---------- Links ----------
 function wa_link(?string $mobile, string $text = ''): string
 {

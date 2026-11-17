@@ -29,15 +29,16 @@ $cls = ['paid' => 'st-paid', 'partial' => 'st-wip', 'unpaid' => 'st-due', 'cance
 </div>
 <div class="box p-0">
   <table class="table-x">
-    <tr><th>#</th><th><?= te('item') ?></th><th class="text-end"><?= te('qty') ?></th><th class="text-end"><?= te('rate') ?></th><th class="text-end">GST</th><th class="text-end"><?= te('amount') ?></th></tr>
+    <tr><th>#</th><th><?= te('item') ?></th><th class="text-end"><?= te('qty') ?></th><th class="text-end"><?= te('rate') ?></th><?php if ($inv['gst_enabled']): ?><th class="text-end">GST</th><?php endif; ?><th class="text-end"><?= te('amount') ?></th></tr>
     <?php foreach ($items as $i => $it): ?>
     <tr><td><?= $i + 1 ?></td><td><?= e($it['description']) ?><br><small class="text-muted"><?= $it['item_type'] === 'labour' ? 'SAC' : 'HSN' ?> <?= e($it['hsn_sac']) ?><?= $it['discount'] > 0 ? ' · ' . te('disc') . ' ' . money($it['discount']) : '' ?></small></td>
-      <td class="text-end"><?= qty($it['qty']) ?></td><td class="text-end"><?= inr($it['rate']) ?></td><td class="text-end"><?= qty($it['gst_rate']) ?>%</td><td class="text-end"><?= inr($it['amount']) ?></td></tr>
+      <td class="text-end"><?= qty($it['qty']) ?></td><td class="text-end"><?= inr($it['rate']) ?></td><?php if ($inv['gst_enabled']): ?><td class="text-end"><?= qty($it['gst_rate']) ?>%</td><?php endif; ?><td class="text-end"><?= inr($it['amount']) ?></td></tr>
     <?php endforeach; ?>
   </table>
   <div class="totals-box">
     <div class="kv"><span><?= te('taxable_amount') ?></span><span><?= money($inv['subtotal']) ?></span></div>
-    <?php if ($inv['is_igst']): ?><div class="kv"><span>IGST</span><span><?= money($inv['igst']) ?></span></div>
+    <?php if (!$inv['gst_enabled']): ?>
+    <?php elseif ($inv['is_igst']): ?><div class="kv"><span>IGST</span><span><?= money($inv['igst']) ?></span></div>
     <?php else: ?><div class="kv"><span>CGST</span><span><?= money($inv['cgst']) ?></span></div><div class="kv"><span>SGST</span><span><?= money($inv['sgst']) ?></span></div><?php endif; ?>
     <?php if ((float) $inv['round_off'] != 0): ?><div class="kv"><span><?= te('round_off') ?></span><span><?= money($inv['round_off']) ?></span></div><?php endif; ?>
     <div class="kv"><span><?= te('total') ?></span><span><?= money($inv['total']) ?></span></div>

@@ -14,6 +14,7 @@ $parts = rows('SELECT jp.*, p.hsn FROM job_card_parts jp JOIN parts p ON p.id = 
 $complaints = rows('SELECT * FROM job_card_complaints WHERE job_card_id = ? ORDER BY id', [$id]);
 $checks = rows('SELECT ci.name, ji.status, ji.remarks FROM job_card_inspections ji JOIN checklist_items ci ON ci.id = ji.checklist_item_id WHERE ji.job_card_id = ? ORDER BY ci.sort_order', [$id]);
 $prices = $public || can('prices');
+$showGst = gst_on() || (float) $jc['tax_total'] > 0;   // hide GST when disabled (unless this order already carries tax)
 $gatepass = input('gatepass') === '1';
 $docName = $gatepass ? 'GATE PASS' : ($jc['status'] === 'estimate' ? 'ESTIMATE' : 'JOB CARD / REPAIR ORDER');
 
@@ -50,17 +51,17 @@ print_toolbar($prices ? wa_link($c['mobile'], order_wa_text($jc)) : '');
   <?php endif; ?>
 
   <div style="margin-top:10px" class="b">Labour / Services</div>
-  <table class="items"><tr><th>#</th><th style="text-align:left">Description</th><th>Qty</th><?php if ($prices): ?><th>Rate</th><th>Disc</th><th>GST%</th><th>Amount</th><?php endif; ?><th>Done</th></tr>
+  <table class="items"><tr><th>#</th><th style="text-align:left">Description</th><th>Qty</th><?php if ($prices): ?><th>Rate</th><th>Disc</th><?php if ($showGst): ?><th>GST%</th><?php endif; ?><th>Amount</th><?php endif; ?><th>Done</th></tr>
     <?php foreach ($labour as $i => $l): ?><tr><td class="c"><?= $i + 1 ?></td><td><?= e($l['description']) ?></td><td class="r"><?= qty($l['qty']) ?></td>
-      <?php if ($prices): ?><td class="r"><?= inr($l['rate']) ?></td><td class="r"><?= inr($l['discount']) ?></td><td class="c"><?= qty($l['gst_rate']) ?></td><td class="r"><?= inr($l['amount']) ?></td><?php endif; ?>
+      <?php if ($prices): ?><td class="r"><?= inr($l['rate']) ?></td><td class="r"><?= inr($l['discount']) ?></td><?php if ($showGst): ?><td class="c"><?= qty($l['gst_rate']) ?></td><?php endif; ?><td class="r"><?= inr($l['amount']) ?></td><?php endif; ?>
       <td class="c"><?= $l['is_done'] ? '✔' : '☐' ?></td></tr><?php endforeach; ?>
     <?php if (!$labour): ?><tr><td colspan="8" class="c muted">—</td></tr><?php endif; ?>
   </table>
 
   <div style="margin-top:10px" class="b">Parts</div>
-  <table class="items"><tr><th>#</th><th style="text-align:left">Part</th><th>HSN</th><th>Qty</th><?php if ($prices): ?><th>Rate</th><th>Disc</th><th>GST%</th><th>Amount</th><?php endif; ?><th>Done</th></tr>
+  <table class="items"><tr><th>#</th><th style="text-align:left">Part</th><th>HSN</th><th>Qty</th><?php if ($prices): ?><th>Rate</th><th>Disc</th><?php if ($showGst): ?><th>GST%</th><?php endif; ?><th>Amount</th><?php endif; ?><th>Done</th></tr>
     <?php foreach ($parts as $i => $p): ?><tr><td class="c"><?= $i + 1 ?></td><td><?= e($p['description']) ?></td><td class="c"><?= e($p['hsn']) ?></td><td class="r"><?= qty($p['qty']) ?></td>
-      <?php if ($prices): ?><td class="r"><?= inr($p['rate']) ?></td><td class="r"><?= inr($p['discount']) ?></td><td class="c"><?= qty($p['gst_rate']) ?></td><td class="r"><?= inr($p['amount']) ?></td><?php endif; ?>
+      <?php if ($prices): ?><td class="r"><?= inr($p['rate']) ?></td><td class="r"><?= inr($p['discount']) ?></td><?php if ($showGst): ?><td class="c"><?= qty($p['gst_rate']) ?></td><?php endif; ?><td class="r"><?= inr($p['amount']) ?></td><?php endif; ?>
       <td class="c"><?= $p['is_done'] ? '✔' : '☐' ?></td></tr><?php endforeach; ?>
     <?php if (!$parts): ?><tr><td colspan="9" class="c muted">—</td></tr><?php endif; ?>
   </table>
@@ -69,7 +70,7 @@ print_toolbar($prices ? wa_link($c['mobile'], order_wa_text($jc)) : '');
   <table class="tot" style="width:40%;margin-left:auto;margin-top:8px">
     <tr><td>Labour</td><td class="r"><?= inr($jc['labour_total']) ?></td></tr>
     <tr><td>Parts</td><td class="r"><?= inr($jc['parts_total']) ?></td></tr>
-    <tr><td>GST</td><td class="r"><?= inr($jc['tax_total']) ?></td></tr>
+    <?php if ($showGst): ?><tr><td>GST</td><td class="r"><?= inr($jc['tax_total']) ?></td></tr><?php endif; ?>
     <tr class="g"><td><?= $jc['status'] === 'estimate' ? 'Estimated Total' : 'Total' ?></td><td class="r">₹<?= inr($jc['grand_total']) ?></td></tr>
   </table>
   <?php endif; ?>

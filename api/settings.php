@@ -23,7 +23,8 @@ api_run(function ($action) {
                 'phone' => nullable((string) input('phone')), 'email' => nullable(filter_var((string) input('email'), FILTER_VALIDATE_EMAIL) ?: ''),
                 'gstin' => valid_gstin((string) input('gstin')), 'state_code' => $state, 'state_name' => GST_STATES[$state],
                 'upi_id' => nullable((string) input('upi_id')), 'bank_details' => nullable((string) input('bank_details')),
-                'invoice_terms' => nullable((string) input('invoice_terms'))];
+                'invoice_terms' => nullable((string) input('invoice_terms')),
+                'gst_enabled' => input('gst_enabled') === '1' ? 1 : 0];
             if ($d['gstin'] && substr($d['gstin'], 0, 2) !== $state) throw new ValidationError(t('gstin_state_mismatch'));
             if (!empty($_FILES['logo']['name'])) {
                 $old = setting('logo');

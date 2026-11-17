@@ -97,6 +97,11 @@ function clean_lines($raw, string $kind): array
 
 function save_jobcard_lines(int $jcId, array $labour, array $parts): void
 {
+    if (!gst_on()) {   // GST disabled: new / edited lines carry no tax
+        foreach ($labour as &$l) $l['gst_rate'] = 0;
+        foreach ($parts as &$p) $p['gst_rate'] = 0;
+        unset($l, $p);
+    }
     q('DELETE FROM job_card_labour WHERE job_card_id = ?', [$jcId]);
     q('DELETE FROM job_card_parts WHERE job_card_id = ?', [$jcId]);
     foreach ($labour as $l) db_insert('job_card_labour', ['job_card_id' => $jcId] + $l);
@@ -129,13 +134,14 @@ function stock_move(int $partId, string $type, float $qty, float $rate, string $
 
 function is_igst_for(?int $customerId): bool
 {
-    if (!$customerId) return false;
+    if (!$customerId || !gst_on()) return false;
     $g = (string) val('SELECT gstin FROM customers WHERE id = ?', [$customerId]);
     return $g !== '' && substr($g, 0, 2) !== (string) setting('state_code');
 }
 
 function insert_invoice_item(int $invId, array $i): void
 {
+    if (!gst_on()) $i['gst_rate'] = 0;   // invoices are only created while the current setting applies
     $tax = round($i['taxable'] * $i['gst_rate'] / 100, 2);
     db_insert('invoice_items', $i + ['invoice_id' => $invId, 'tax' => $tax, 'amount' => $i['taxable'] + $tax]);
 }
@@ -171,6 +177,11 @@ function create_invoice_from_jobcard(int $jcId): int
         if (!$jc) throw new ValidationError(t('not_found'));
         if (in_array($jc['status'], ['invoiced', 'delivered', 'cancelled'], true)) throw new ValidationError(t('already_invoiced'));
         if ((int) val('SELECT COUNT(*) FROM invoices WHERE job_card_id = ?', [$jcId]) > 0) throw new ValidationError(t('already_invoiced'));
+        if (!gst_on()) {   // open order invoiced after GST was disabled: drop its tax first
+            q('UPDATE job_card_labour SET gst_rate = 0 WHERE job_card_id = ?', [$jcId]);
+            q('UPDATE job_card_parts SET gst_rate = 0 WHERE job_card_id = ?', [$jcId]);
+            recalc_jobcard($jcId);
+        }
         $labour = rows('SELECT * FROM job_card_labour WHERE job_card_id = ?', [$jcId]);
         $parts  = rows('SELECT jp.*, p.hsn FROM job_card_parts jp JOIN parts p ON p.id = jp.part_id WHERE jp.job_card_id = ?', [$jcId]);
         if (!$labour && !$parts) throw new ValidationError(t('add_lines_first'));
@@ -180,7 +191,7 @@ function create_invoice_from_jobcard(int $jcId): int
         $invId = db_insert('invoices', [
             'invoice_no' => $no, 'type' => 'job', 'job_card_id' => $jcId, 'customer_id' => $jc['customer_id'],
             'invoice_date' => date('Y-m-d'), 'place_of_supply' => setting('state_code'), 'is_igst' => $igst ? 1 : 0,
-            'created_by' => uid(),
+            'gst_enabled' => gst_on() ? 1 : 0, 'created_by' => uid(),
         ]);
         foreach ($labour as $l) {
             insert_invoice_item($invId, ['item_type' => 'labour', 'part_id' => null, 'description' => $l['description'],
@@ -211,7 +222,7 @@ function create_counter_invoice(array $h, array $labour, array $parts): int
             'invoice_no' => $no, 'type' => 'counter', 'job_card_id' => null, 'customer_id' => $cid,
             'customer_name' => $cid ? null : nullable($h['customer_name']), 'customer_mobile' => $cid ? null : nullable($h['customer_mobile']),
             'invoice_date' => $h['invoice_date'], 'place_of_supply' => setting('state_code'),
-            'is_igst' => is_igst_for($cid) ? 1 : 0, 'notes' => nullable($h['notes']), 'created_by' => uid(),
+            'is_igst' => is_igst_for($cid) ? 1 : 0, 'gst_enabled' => gst_on() ? 1 : 0, 'notes' => nullable($h['notes']), 'created_by' => uid(),
         ]);
         foreach ($labour as $l) {
             insert_invoice_item($invId, ['item_type' => 'labour', 'part_id' => null, 'description' => $l['description'], 'hsn_sac' => '998714',

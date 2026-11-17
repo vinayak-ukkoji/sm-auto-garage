@@ -29,6 +29,11 @@ include __DIR__ . '/includes/header.php';
           <div class="col-6"><label class="form-label"><?= te('pincode') ?></label><input name="pincode" value="<?= e($s['pincode']) ?>" class="form-control"></div>
           <div class="col-6"><label class="form-label"><?= te('phone') ?></label><input name="phone" value="<?= e($s['phone']) ?>" class="form-control"></div>
           <div class="col-6"><label class="form-label"><?= te('email_address') ?></label><input name="email" type="email" value="<?= e($s['email']) ?>" class="form-control"></div>
+          <div class="col-12"><div class="form-check form-switch">
+            <input type="hidden" name="gst_enabled" value="0">
+            <input class="form-check-input" type="checkbox" role="switch" id="gstEnabled" name="gst_enabled" value="1" <?= (int) ($s['gst_enabled'] ?? 1) === 1 ? 'checked' : '' ?>>
+            <label class="form-check-label" for="gstEnabled"><?= te('gst_enabled') ?></label></div>
+            <small class="text-muted"><?= te('gst_enabled_help') ?></small></div>
           <div class="col-6"><label class="form-label">GSTIN</label><input name="gstin" value="<?= e($s['gstin']) ?>" maxlength="15" class="form-control" style="text-transform:uppercase"></div>
           <div class="col-6"><label class="form-label"><?= te('state') ?></label><select name="state_code" class="form-select">
             <?php foreach (GST_STATES as $code => $name): $code = str_pad((string) $code, 2, '0', STR_PAD_LEFT); ?><option value="<?= $code ?>" <?= $code === $s['state_code'] ? 'selected' : '' ?>><?= $code ?> - <?= e($name) ?></option><?php endforeach; ?></select></div>

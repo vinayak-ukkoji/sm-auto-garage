@@ -470,6 +470,8 @@ return [
     'submit' => 'Submit',
     'tagline' => 'Tagline',
     'tax_rates' => 'Tax Rates',
+    'gst_enabled' => 'Charge GST on new bills',
+    'gst_enabled_help' => 'When off, new job cards and invoices have no GST. Already created invoices keep their original tax.',
     'tax_rates_help' => 'GST rates available on lines: 0, 5, 12, 18 and 28%.',
     'taxable' => 'Taxable',
     'taxable_amount' => 'Taxable Amount',

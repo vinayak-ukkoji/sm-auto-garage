@@ -144,6 +144,8 @@
     const $el = $(el), kind = opts.kind, self = this;
     let lines = (opts.lines || []).map(l => Object.assign({}, l));
     const GST = [0, 5, 12, 18, 28];
+    const gstOn = !(window.APP && window.APP.gst === false);   // GST disabled in Settings
+    const rateOf = l => gstOn ? (+l.gst_rate || 0) : 0;
     const noDisc = kind === 'po';
     const placeholder = opts.placeholder || (kind === 'labour' ? 'Search / type service…' : 'Search part by name / number…');
     $el.html('<div class="le-rows"></div><div class="le-add"><input type="text" placeholder="' + esc(placeholder) + '"></div><div class="totals-box le-tot"></div>');
@@ -160,15 +162,15 @@
           '<div><label>Qty</label><input type="number" step="0.01" min="0.01" class="le-q" value="' + esc(l.qty) + '"></div>' +
           '<div><label>' + (kind === 'po' ? 'Purchase rate' : 'Rate') + '</label><input type="number" step="0.01" min="0" class="le-r" value="' + esc(l.rate) + '"></div>' +
           (noDisc ? '' : '<div><label>Discount ₹</label><input type="number" step="0.01" min="0" class="le-x" value="' + esc(l.discount || 0) + '"></div>') +
-          '<div><label>GST %</label><select class="le-g">' + GST.map(g => '<option ' + (+l.gst_rate === g ? 'selected' : '') + '>' + g + '</option>').join('') + '</select></div>' +
+          (gstOn ? '<div><label>GST %</label><select class="le-g">' + GST.map(g => '<option ' + (+l.gst_rate === g ? 'selected' : '') + '>' + g + '</option>').join('') + '</select></div>' : '') +
           '</div></div>';
       }).join(''));
       totals();
     }
     function totals() {
       let tax = 0, taxable = 0;
-      lines.forEach(l => { const a = amount(l); taxable += a; tax += Math.round(a * (+l.gst_rate || 0)) / 100; });
-      $el.find('.le-tot').html(lines.length ? '<div class="kv"><span>Taxable</span><span>' + inr(taxable) + '</span></div><div class="kv"><span>GST</span><span>' + inr(tax) + '</span></div><div class="kv"><span>Total</span><span>' + inr(taxable + tax) + '</span></div>' : '');
+      lines.forEach(l => { const a = amount(l); taxable += a; tax += Math.round(a * rateOf(l)) / 100; });
+      $el.find('.le-tot').html(lines.length ? (gstOn ? '<div class="kv"><span>Taxable</span><span>' + inr(taxable) + '</span></div><div class="kv"><span>GST</span><span>' + inr(tax) + '</span></div>' : '') + '<div class="kv"><span>Total</span><span>' + inr(taxable + tax) + '</span></div>' : '');
       opts.onChange && opts.onChange();
     }
     rowsEl.on('input change', 'input,select', function () {
@@ -189,7 +191,7 @@
         it => esc(it.name) + ' <small class="float-end">' + inr(it.rate) + '</small>',
         it => { lines.push({ labour_rate_id: it.id, description: it.name, qty: 1, rate: +it.rate, discount: 0, gst_rate: +it.gst_rate }); input.val(''); render(); },
         { extra: t => '<div data-extra="1"><i class="bi bi-plus-circle"></i> Add "' + esc(t) + '"</div>',
-          onExtra: t => { if (!t) return; lines.push({ labour_rate_id: null, description: t, qty: 1, rate: 0, discount: 0, gst_rate: 18 }); input.val(''); render(); rowsEl.find('.le-r').last().focus(); } });
+          onExtra: t => { if (!t) return; lines.push({ labour_rate_id: null, description: t, qty: 1, rate: 0, discount: 0, gst_rate: gstOn ? 18 : 0 }); input.val(''); render(); rowsEl.find('.le-r').last().focus(); } });
     } else {
       autocomplete(input, t => apiGet('search.php', { type: 'parts', q: t }).then(r => r.data),
         it => esc(it.name) + (it.part_no ? ' <small>(' + esc(it.part_no) + ')</small>' : '') + ' <small class="float-end">Stock ' + (+it.stock) + ' · ' + inr(kind === 'po' ? it.purchase_price : it.selling_price) + '</small>',
@@ -203,7 +205,7 @@
     this.get = () => lines.map(l => Object.assign({}, l, { amount: amount(l) }));
     this.set = ls => { lines = ls.map(l => Object.assign({}, l)); render(); };
     this.json = () => JSON.stringify(self.get());
-    this.totals = () => { let tx = 0, ta = 0; lines.forEach(l => { const a = amount(l); ta += a; tx += Math.round(a * (+l.gst_rate || 0)) / 100; }); return { taxable: ta, tax: tx, total: ta + tx }; };
+    this.totals = () => { let tx = 0, ta = 0; lines.forEach(l => { const a = amount(l); ta += a; tx += Math.round(a * rateOf(l)) / 100; }); return { taxable: ta, tax: tx, total: ta + tx }; };
     render();
   };
 })(jQuery);

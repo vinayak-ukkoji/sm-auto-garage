@@ -24,7 +24,7 @@ if (current_user() && is_tech()) unset($tabs['parts'], $tabs['accounts']);
 <script src="<?= asset('vendor/jquery/jquery.min.js') ?>"></script>
 <script src="<?= asset('vendor/bootstrap/bootstrap.bundle.min.js') ?>"></script>
 <script>window.APP = <?= json_encode([
-    'base' => base_url(), 'csrf' => csrf_token(), 'lang' => lang(), 'role' => role(),
+    'base' => base_url(), 'csrf' => csrf_token(), 'lang' => lang(), 'role' => role(), 'gst' => gst_on(),
     'i18n' => ['saved' => t('saved'), 'error' => t('error'), 'confirm' => t('are_you_sure'), 'no_results' => t('no_results'),
                'loading' => t('loading'), 'session_expired' => t('session_expired')],
     'flash' => take_flash(),
