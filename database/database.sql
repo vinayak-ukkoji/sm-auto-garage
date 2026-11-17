@@ -51,6 +51,7 @@ CREATE TABLE settings (
   logo                   VARCHAR(255) NULL,
   invoice_prefix         VARCHAR(10)  NOT NULL DEFAULT 'INV-',
   invoice_next           INT UNSIGNED NOT NULL DEFAULT 1,
+  invoice_fy             VARCHAR(7)   NULL,                 -- financial year of invoice counter, e.g. 26-27
   jobcard_prefix         VARCHAR(10)  NOT NULL DEFAULT 'JC-',
   jobcard_next           INT UNSIGNED NOT NULL DEFAULT 1,
   po_prefix              VARCHAR(10)  NOT NULL DEFAULT 'PO-',

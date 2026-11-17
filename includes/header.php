@@ -26,6 +26,7 @@ $langUrl = function ($l) {
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 <meta name="base-url" content="<?= e(base_url()) ?>">
 <title><?= e(($title ? $title . ' · ' : '') . $garage) ?></title>
+<?= brand_head() ?>
 <link href="<?= asset('vendor/bootstrap/bootstrap.min.css') ?>" rel="stylesheet">
 <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.min.css') ?>" rel="stylesheet">
 <link href="<?= asset('css/app.css') ?>" rel="stylesheet">
@@ -42,7 +43,7 @@ $langUrl = function ($l) {
       <?php endif; ?>
     </div>
     <div class="hdr-center">
-      <?php if ($logo): ?><img src="<?= e(url($logo)) ?>" alt="" class="hdr-logo"><?php endif; ?>
+      <img src="<?= e(logo_url()) ?>" alt="" class="hdr-logo">
       <div class="brand"><?= e($garage) ?></div>
       <?php if ($u): ?><div class="sub"><?= e($u['name']) ?></div><?php endif; ?>
     </div>

@@ -32,6 +32,7 @@ $garage = setting('garage_name') ?: APP_NAME;
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#12926f">
 <title><?= te('login') ?> · <?= e($garage) ?></title>
+<?= brand_head() ?>
 <link href="<?= asset('vendor/bootstrap/bootstrap.min.css') ?>" rel="stylesheet">
 <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.min.css') ?>" rel="stylesheet">
 <link href="<?= asset('css/app.css') ?>" rel="stylesheet">
@@ -40,11 +41,7 @@ $garage = setting('garage_name') ?: APP_NAME;
 <div class="login-wrap">
   <form method="post" class="login-card" autocomplete="on">
     <?= csrf_field() ?>
-    <?php if (setting('logo')): ?>
-      <img src="<?= e(url(setting('logo'))) ?>" alt="" style="max-height:70px;display:block;margin:0 auto 10px">
-    <?php else: ?>
-      <div class="login-logo"><i class="bi bi-tools"></i></div>
-    <?php endif; ?>
+    <img src="<?= e(logo_url()) ?>" alt="" style="max-height:70px;display:block;margin:0 auto 10px">
     <h1><?= e($garage) ?></h1>
     <div class="tag"><?= e(setting('tagline') ?: '') ?></div>
     <?php if ($error): ?><div class="alert alert-danger py-2 small"><?= e($error) ?></div><?php endif; ?>

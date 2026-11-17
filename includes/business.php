@@ -49,9 +49,32 @@ function next_number(string $type): string
 {
     $map = ['invoice' => ['invoice_prefix', 'invoice_next'], 'jobcard' => ['jobcard_prefix', 'jobcard_next'], 'po' => ['po_prefix', 'po_next']];
     [$p, $n] = $map[$type];
+    if ($type === 'invoice') return next_invoice_number();
     $s = row("SELECT $p AS prefix, $n AS num FROM settings WHERE id = 1 FOR UPDATE");
     q("UPDATE settings SET $n = $n + 1 WHERE id = 1");
     return $s['prefix'] . str_pad((string) $s['num'], 4, '0', STR_PAD_LEFT);
+}
+
+/**
+ * Invoice number: PREFIX/FY/0001  e.g. INV/26-27/0001  (Indian financial year Apr-Mar).
+ * Sequence restarts at 0001 on 1 April; always unique (counter row is locked, invoice_no is UNIQUE).
+ */
+function next_invoice_number(?string $today = null): string
+{
+    $t = $today ? strtotime($today) : time();
+    $y = (int) date('Y', $t);
+    if ((int) date('n', $t) < 4) $y--;
+    $fy = sprintf('%02d-%02d', $y % 100, ($y + 1) % 100);
+    $s = row('SELECT invoice_prefix AS prefix, invoice_next AS num, invoice_fy AS fy FROM settings WHERE id = 1 FOR UPDATE');
+    $num = ($s['fy'] !== null && $s['fy'] !== $fy) ? 1 : max(1, (int) $s['num']);
+    $prefix = rtrim((string) $s['prefix'], '-/ ') ?: 'INV';
+    do {   // skip any number already taken (e.g. after a manual counter change)
+        $no = $prefix . '/' . $fy . '/' . str_pad((string) $num, 4, '0', STR_PAD_LEFT);
+        $taken = (int) val('SELECT COUNT(*) FROM invoices WHERE invoice_no = ?', [$no]) > 0;
+        if ($taken) $num++;
+    } while ($taken);
+    q('UPDATE settings SET invoice_next = ?, invoice_fy = ? WHERE id = 1', [$num + 1, $fy]);
+    return $no;
 }
 
 function log_status(int $jcId, string $status, string $note = ''): void

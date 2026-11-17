@@ -58,8 +58,8 @@ $cls = ['paid' => 'st-paid', 'partial' => 'st-wip', 'unpaid' => 'st-due', 'cance
 
 <?php if ($inv['status'] !== 'cancelled'): ?>
   <?php if ($inv['balance'] > 0): ?><button class="btn-main" data-bs-toggle="modal" data-bs-target="#payModal"><?= te('add_payment') ?></button><?php endif; ?>
-  <?php if ($mobile): ?><a class="btn-main outline text-center pt-2" target="_blank" href="<?= e(wa_link($mobile, $wa)) ?>"><i class="bi bi-whatsapp"></i> <?= te('share_whatsapp') ?></a><?php endif; ?>
-  <a class="btn-main outline text-center pt-2" target="_blank" href="<?= url('print/invoice.php?id=' . $id . '&print=1') ?>"><i class="bi bi-printer"></i> <?= te('print_pdf') ?></a>
+  <?php if ($mobile): ?><a class="btn-main outline text-center pt-2" target="_blank" href="<?= url('print/invoice.php?id=' . $id . '&share=1') ?>"><i class="bi bi-whatsapp"></i> <?= te('share_whatsapp') ?></a><?php endif; ?>
+  <a class="btn-main outline text-center pt-2" target="_blank" href="<?= url('print/invoice.php?id=' . $id . '&download=1') ?>"><i class="bi bi-download"></i> <?= te('print_pdf') ?></a>
   <?php if (is_admin() && (float) $inv['paid'] == 0): ?>
     <button class="btn btn-link text-danger w-100 mt-2" id="cancelInv"><?= te('cancel_invoice') ?></button>
   <?php endif; ?>

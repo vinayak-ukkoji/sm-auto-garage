@@ -145,6 +145,30 @@ function setting(?string $key = null)
     return $key === null ? $s : ($s[$key] ?? null);
 }
 
+/** Favicon, home-screen icons and web-app manifest (same branding on every page, incl. print views). */
+function brand_head(): string
+{
+    return '<link rel="icon" href="' . e(url('favicon.ico')) . '" sizes="any">' . "
+"
+        . '<link rel="icon" type="image/png" sizes="32x32" href="' . e(asset('img/favicon-32.png')) . '">' . "
+"
+        . '<link rel="apple-touch-icon" href="' . e(asset('img/apple-touch-icon.png')) . '">' . "
+"
+        . '<link rel="manifest" href="' . e(url('manifest.webmanifest')) . '">' . "
+"
+        . '<meta name="apple-mobile-web-app-title" content="SM Garage">' . "
+"
+        . '<meta name="application-name" content="S M AUTO GARAGE">' . "
+";
+}
+
+/** Garage logo: the uploaded one from Settings, otherwise the built-in S M AUTO GARAGE mark. */
+function logo_url(): string
+{
+    $l = setting('logo');
+    return $l ? url($l) : asset('img/logo-mark.png');
+}
+
 /** Is GST currently enabled in Settings? (new documents follow this; saved invoices keep their own flag) */
 function gst_on(): bool
 {

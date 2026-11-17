@@ -16,6 +16,7 @@ $mobile = $inv['cmobile'] ?: $inv['customer_mobile'];
 $wa = $mobile ? wa_link($mobile, fill_template((string) $s['wa_template_invoice'], ['customer' => $name, 'reg_no' => $inv['reg_no'] ?? '',
     'invoice_no' => $inv['invoice_no'], 'total' => inr($inv['total']), 'balance' => inr($inv['balance'])]) . "\n" . public_doc_url('inv', $id)) : '';
 
+$GLOBALS['print_gst'] = (bool) $inv['gst_enabled'];
 print_start('Invoice ' . $inv['invoice_no']);
 print_toolbar($wa);
 ?>

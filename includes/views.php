@@ -108,7 +108,7 @@ function order_card(array $r): string
       <div class="oc-links">
         <a href="<?= url('print/jobcard.php?id=' . $r['id']) ?>" target="_blank"><i class="bi bi-file-earmark-pdf"></i> <?= te('repair_order') ?></a>
         <?php if ($r['inv_id'] && $prices): ?><a href="<?= url('print/invoice.php?id=' . $r['inv_id']) ?>" target="_blank"><i class="bi bi-file-earmark-pdf"></i> <?= te('invoice') ?></a><?php endif; ?>
-        <a class="wa" href="<?= e(wa_link($r['mobile'], order_wa_text($r))) ?>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+        <a class="wa" href="<?= url('print/jobcard.php?id=' . $r['id'] . '&share=1') ?>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a>
       </div>
     </div>
   </div>
