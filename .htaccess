@@ -1,3 +1,11 @@
+# Production: force HTTPS on the live domain
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteCond %{HTTP_HOST} ^smgarage\.thedigicraze\.com$ [NC]
+  RewriteRule ^ https://smgarage.thedigicraze.com%{REQUEST_URI} [L,R=301]
+</IfModule>
 Options -Indexes
 AddType application/manifest+json .webmanifest
 DirectoryIndex index.php

@@ -191,6 +191,7 @@ function fill_template(string $tpl, array $vars): string
 }
 function abs_url(string $path): string
 {
+    if (APP_URL !== '') return APP_URL . url($path);
     $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
     return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . url($path);
 }

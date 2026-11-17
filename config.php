@@ -37,6 +37,9 @@ define('COUNTRY_CODE', env_val('COUNTRY_CODE', '91'));       // used for WhatsAp
 // Set manually if links break, e.g. BASE_URL=/garage in .env
 define('BASE_URL', env_val('BASE_URL', ''));
 
+// Public site address used in shared links (invoice / job card / feedback). Leave empty to auto-detect.
+define('APP_URL', rtrim((string) env_val('APP_URL', ''), '/'));
+
 define('UPLOAD_MAX_MB', 5);
 define('SESSION_NAME', 'smgarage_sid');
 

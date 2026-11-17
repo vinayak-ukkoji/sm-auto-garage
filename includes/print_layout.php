@@ -67,13 +67,15 @@ function print_toolbar(string $waLink = ''): void
 <script>
 (function () {
   const bar = document.getElementById('pdfBar'), file = bar.dataset.file;
-  function build() {   // render the A4 sheet into a real PDF file (Blob)
+  async function build() {   // render the A4 sheet into a real PDF file (Blob)
     document.body.classList.add('pdf-mode');
-    return html2pdf().set({ margin: [8, 8, 8, 8], filename: file, image: { type: 'jpeg', quality: 0.98 },
+    try {
+      // NB: do not chain .finally() on the html2pdf worker (it is not a native Promise); use await + try/finally
+      return await html2pdf().set({ margin: [8, 8, 8, 8], filename: file, image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] } })
-      .from(document.querySelector('.sheet')).outputPdf('blob')
-      .finally(() => document.body.classList.remove('pdf-mode'));
+      .from(document.querySelector('.sheet')).outputPdf('blob');
+    } finally { document.body.classList.remove('pdf-mode'); }
   }
   function save(blob) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file;
