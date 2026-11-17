@@ -18,7 +18,7 @@ function print_start(string $docTitle): void
   .toolbar a.wa, .toolbar button.wa { background: #25d366; }
   .toolbar button:disabled { opacity: .6; cursor: wait; }
   .share-hint { text-align: center; font-size: 13px; color: #0b3c5d; background: #e8f4fb; padding: 6px; margin: 0 auto 6px; max-width: 210mm; }
-  body.pdf-mode .sheet { width: 794px !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+  .sheet.pdf-sheet, body.pdf-mode .sheet { width: 733px !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
   .doc-top { text-align: center; padding-bottom: 8px; letter-spacing: 1px; line-height: 1.5; }
   .doc-top .b { font-size: 17px !important; letter-spacing: 3px; }
   .hd { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #9fcbe3; padding-bottom: 10px; gap: 12px; }
@@ -41,7 +41,12 @@ function print_start(string $docTitle): void
   .box2 { border: 1px solid #bbb; padding: 6px 8px; }
   .chk { display: inline-block; width: 49%; padding: 2px 0; }
   @media print { body { background: #fff; } .sheet { margin: 0; box-shadow: none; width: auto; min-height: 0; padding: 0; } .toolbar { display: none; } }
-  @media (max-width: 800px) { .sheet { width: 100%; padding: 12px; min-height: 0; } }
+  /* The sheet always keeps its true A4 width; on small screens it is scaled down to fit (see fit() below),
+     so the layout looks identical on phone, desktop, print and PDF. */
+  html { -webkit-text-size-adjust: 100%; }
+  .sheet { overflow: hidden; }
+  html, body { overflow-x: hidden; }
+  @media (max-width: 800px) { .sheet { margin: 6px auto; box-shadow: none; } }
 </style></head><body>
 <?php }
 
@@ -67,15 +72,28 @@ function print_toolbar(string $waLink = ''): void
 <script>
 (function () {
   const bar = document.getElementById('pdfBar'), file = bar.dataset.file;
+  const getSheet = () => document.querySelector('.sheet');   // the sheet is rendered after this toolbar, so look it up lazily
+  function fit() {   // phones: scale the fixed-width A4 sheet to the screen width
+    const sh = getSheet(); if (!sh) return;
+    const s = Math.min(1, (document.documentElement.clientWidth - 8) / 794);
+    sh.style.zoom = s < 1 ? s : '';
+  }
+  window.addEventListener('load', fit); window.addEventListener('resize', fit);
+  window.addEventListener('beforeprint', () => { const sh = getSheet(); if (sh) sh.style.zoom = ''; }); window.addEventListener('afterprint', fit);
   async function build() {   // render the A4 sheet into a real PDF file (Blob)
-    document.body.classList.add('pdf-mode');
+    // Use an off-screen copy exactly as wide as the A4 printable area (194mm = 733px) so the PDF never depends on the phone's screen width / zoom.
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-12000px;top:0;width:733px;background:#fff';
+    const clone = getSheet().cloneNode(true);
+    clone.style.zoom = ''; clone.style.margin = '0'; clone.classList.add('pdf-sheet');
+    holder.appendChild(clone); document.body.appendChild(holder);
     try {
       // NB: do not chain .finally() on the html2pdf worker (it is not a native Promise); use await + try/finally
       return await html2pdf().set({ margin: [8, 8, 8, 8], filename: file, image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, windowWidth: 733 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] } })
-      .from(document.querySelector('.sheet')).outputPdf('blob');
-    } finally { document.body.classList.remove('pdf-mode'); }
+        .from(clone).outputPdf('blob');
+    } finally { holder.remove(); }
   }
   function save(blob) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file;
